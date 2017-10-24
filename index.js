@@ -1,15 +1,22 @@
 'use strict';
 
-var MIDDLEWARE_ACTION_TYPE = require('./constants').MIDDLEWARE_ACTION_TYPE;
+function middleware() {
+    return function (next) {
+        return function (action) {
+            if (action instanceof Array) {
+                var actionCreator = action[0];
+                var params = action.slice(1);
 
-function executeAction (actionCreator) {
-    var params = Array.prototype.slice.call(arguments, 1);
+                if (actionCreator instanceof Function) {
+                    return next(actionCreator.apply(null, params))
+                }
 
-    return {
-        type: MIDDLEWARE_ACTION_TYPE,
-        actionCreator: actionCreator,
-        params: params
+                throw new Error('First element in array should be a thunk! It was: ' + typeof action[0]);
+            }
+
+            return next(action);
+        }
     };
-}
+};
 
-module.exports.executeAction = executeAction;
+module.exports = middleware;

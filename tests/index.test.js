@@ -1,27 +1,34 @@
 var test = require('tape');
 var sinon = require('sinon');
 
-var executeAction = require('../').executeAction;
-var middleware = require('../middleware');
+var middleware = require('../');
 
 test('middleware should handle action by passing action creator called with params to next middleware', function(t) {
   const store = { dispatch: sinon.spy() };
-  const actionCreatorStub = sinon.stub();
+  const handledAction = { type: 'SUCCESS' };
+  const actionCreatorStub = sinon.stub().returns(handledAction);
   const nextSpy = sinon.spy();
-  const handledAction = { type: 'TEST' };
-  const action = {
-    type: '@@MIDDLEWARE_REDUX_PRE_THUNK',
-    params: [ 'abcd', true ],
-    actionCreator: actionCreatorStub.returns(handledAction)
-  };
+  const action = [ actionCreatorStub, 'first-argument', true ];
 
-  t.plan(3);
+  t.plan(4);
 
   middleware(store)(nextSpy)(action);
 
   t.same(nextSpy.callCount, 1);
   t.same(store.dispatch.callCount, 0);
   t.same(handledAction, nextSpy.firstCall.args[0]);
+  t.same(['first-argument', true], actionCreatorStub.firstCall.args);
+});
+
+test('middleware should throw when handled action has no actionCreator', function(t) {
+  const store = { dispatch: sinon.spy() };
+  const handledAction = { type: 'SUCCESS' };
+  const nextSpy = sinon.spy();
+  const action = [ {}, 'first-argument', true ];
+
+  t.plan(1);
+
+  t.throws(middleware(store)(nextSpy).bind(null, action), Error);
 });
 
 test('middleware should pass non middleware specific action to the next middleware', function(t) {
@@ -38,16 +45,4 @@ test('middleware should pass non middleware specific action to the next middlewa
   t.same(nextSpy.callCount, 2);
   t.same(otherAction, nextSpy.firstCall.args[0]);
   t.same(thunkAction, nextSpy.secondCall.args[0]);
-});
-
-test('executeAction should create an action that will be handled by middleware', function(t) {
-  const actionCreator = function() {};
-
-  t.plan(1);
-
-  t.same(executeAction(actionCreator, 'title', { data: 'test' }), {
-    type: '@@MIDDLEWARE_REDUX_PRE_THUNK',
-    params: [ 'title', { data: 'test' } ],
-    actionCreator: actionCreator
-  })
 });

@@ -1,9 +1,9 @@
 {
   "name": "redux-pre-thunk",
-  "description": "Wrap redux-thunk for greater testability with middleware & action",
+  "description": "Use redux-thunk with greater testability with middleware & actions",
   "homepage": "https://github.com/holidaycheck/redux-pre-thunk",
   "author": "Artur Szott",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "main": "index.js",
   "scripts": {
     "test": "tape tests/*.js | tap-spec"
